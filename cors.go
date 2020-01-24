@@ -36,7 +36,7 @@ func PreflightForCORS(w http.ResponseWriter, r *http.Request, allowHeaders, allo
 	return true
 }
 
-// AddCORSHeader は、認証用のヘッダを追加します。
+// AddCORSHeader add a header for authentication.
 func AddCORSHeader(w http.ResponseWriter, allowOrigin string) {
 	w.Header().Set("Access-Control-Allow-Origin", allowOrigin)
 }
