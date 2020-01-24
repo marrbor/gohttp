@@ -1,15 +1,27 @@
 package gohttp_test
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/marrbor/gohttp"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/marrbor/gohttp"
+	"github.com/stretchr/testify/assert"
 )
+
+type testResponse struct {
+	ID     int64    `json:"id"`
+	Name   string   `json:"name"`
+	Params []string `json:"params"`
+}
+
+var res = testResponse{
+	ID:     123,
+	Name:   "abcdefg",
+	Params: []string{"hij", "klmn", "opqr", "stu", "vw", "xyz"},
+}
 
 func TestBadRequest(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -54,36 +66,23 @@ func TestInternalServerError(t *testing.T) {
 }
 
 func TestJSONResponse(t *testing.T) {
-	type testResponse struct {
-		ID     int64    `json:"id"`
-		Name   string   `json:"name"`
-		Params []string `json:"params"`
-	}
-
-	var res = testResponse{
-		ID:     123,
-		Name:   "abcdefg",
-		Params: []string{"hij", "klmn", "opqr", "stu", "vw", "xyz"},
-	}
-
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		err := gohttp.JSONResponse(w, &res)
 		assert.NoError(t, err)
 	})
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
+
 	r, err := http.Get(ts.URL)
 	assert.NoError(t, err)
 	assert.EqualValues(t, http.StatusOK, r.StatusCode)
-	body, err := ioutil.ReadAll(r.Body)
-	assert.NoError(t, err)
+
 	var resp testResponse
-	err = json.Unmarshal(body, &resp)
+	err = gohttp.ResponseJSONToParams(r, &resp)
+	assert.NoError(t, err)
 	assert.EqualValues(t, res.ID, resp.ID)
 	assert.EqualValues(t, res.Name, resp.Name)
-	for i, s := range resp.Params {
-		assert.EqualValues(t, res.Params[i], s)
-	}
+	assert.EqualValues(t, res.Params, resp.Params)
 }
 
 func TestJSONResponse2(t *testing.T) {
@@ -98,7 +97,7 @@ func TestJSONResponse2(t *testing.T) {
 	assert.EqualValues(t, http.StatusOK, r.StatusCode)
 	body, err := ioutil.ReadAll(r.Body)
 	assert.NoError(t, err)
-	assert.EqualValues(t,0,len(body))
+	assert.EqualValues(t, 0, len(body))
 }
 
 func TestUnauthorized(t *testing.T) {
@@ -153,4 +152,23 @@ func TestResponseOK(t *testing.T) {
 	r, err := http.Get(ts.URL)
 	assert.NoError(t, err)
 	assert.EqualValues(t, http.StatusOK, r.StatusCode)
+}
+
+func TestResponseJSONToParams(t *testing.T) {
+	// only test error path since normal path is tested in TestJSONResponse.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := gohttp.JSONResponse(w, &res)
+		assert.NoError(t, err)
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	r, err := http.Get(ts.URL)
+	assert.NoError(t, err)
+	assert.EqualValues(t, http.StatusOK, r.StatusCode)
+
+	// give invalid structure.
+	var x struct{ ID string }
+	err = gohttp.ResponseJSONToParams(r, &x)
+	assert.Error(t, err)
 }

@@ -2,6 +2,7 @@ package gohttp
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -67,6 +68,21 @@ func JSONResponse(w http.ResponseWriter, data interface{}) error {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(j); err != nil {
+		return err
+	}
+	return nil
+}
+
+////// Receive response (for client side program)
+
+// ResponseJSONToParams convert JSON body in response to given structure.
+func ResponseJSONToParams(r *http.Response, params interface{}) error {
+	defer r.Body.Close()
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(b, &params); err != nil {
 		return err
 	}
 	return nil
