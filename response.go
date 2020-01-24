@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+////// Send response (for server side program)
+
 // ResponseOK returns 200 ok.
 func ResponseOK(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
