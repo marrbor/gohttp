@@ -3,11 +3,12 @@ package gohttp_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/marrbor/gohttp"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/marrbor/gohttp"
+	"github.com/stretchr/testify/assert"
 )
 
 type testRequest struct {
@@ -29,9 +30,7 @@ func TestRequestJSONToParams(t *testing.T) {
 		assert.NoError(t, err)
 		assert.EqualValues(t, req.ID, data.ID)
 		assert.EqualValues(t, req.Name, data.Name)
-		for i, s := range req.Params {
-			assert.EqualValues(t, req.Params[i], s)
-		}
+		assert.EqualValues(t, req.Params, data.Params)
 		gohttp.ResponseOK(w)
 	})
 
@@ -44,4 +43,84 @@ func TestRequestJSONToParams(t *testing.T) {
 	r, err := http.Post(ts.URL, "text/json", bytes.NewReader(body))
 	assert.NoError(t, err)
 	assert.EqualValues(t, http.StatusOK, r.StatusCode)
+}
+
+func TestRequestJSONToParams2(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var data testRequest
+		err := gohttp.RequestJSONToParams(r, &data)
+		assert.Error(t, err)
+		gohttp.BadRequest(w, err)
+	})
+
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	// send illegal type to generate unmarshal error.
+	invalidReq := struct{ ID string }{ID: "id"}
+	body, err := json.Marshal(invalidReq)
+	assert.NoError(t, err)
+
+	r, err := http.Post(ts.URL, "text/json", bytes.NewReader(body))
+	assert.NoError(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, r.StatusCode)
+	assert.EqualValues(t, "400 Bad Request", r.Status)
+}
+
+func TestGenRequest(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.EqualValues(t, r.Method, http.MethodGet)
+		assert.EqualValues(t, "", r.Header.Get("Content-Type"))
+		gohttp.ResponseOK(w)
+	})
+
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	url := ts.URL
+	req, err := gohttp.GenRequest(http.MethodGet, url)
+	assert.NoError(t, err)
+	c := new(http.Client)
+	res, err := c.Do(req)
+	assert.NoError(t, err)
+	assert.EqualValues(t, http.StatusOK, res.StatusCode)
+}
+
+func TestGenRequest2(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "application/json", r.Header.Get("Content-Type"))
+		var data testRequest
+		err := gohttp.RequestJSONToParams(r, &data)
+		assert.NoError(t, err)
+		assert.EqualValues(t, req.ID, data.ID)
+		assert.EqualValues(t, req.Name, data.Name)
+		assert.EqualValues(t, req.Params, data.Params)
+		gohttp.ResponseOK(w)
+	})
+
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	url := ts.URL
+	req, err := gohttp.GenRequest(http.MethodPost, url, &req)
+	assert.NoError(t, err)
+	c := new(http.Client)
+	res, err := c.Do(req)
+	assert.NoError(t, err)
+	assert.EqualValues(t, http.StatusOK, res.StatusCode)
+}
+
+func TestGenRequest3(t *testing.T) {
+	// give channel as parameter to generate JSON marshall error.
+	req, err := gohttp.GenRequest(http.MethodPut, "http://localhost:8080", make(chan int))
+	assert.Nil(t, req)
+	assert.Error(t, err)
+}
+
+func TestGenRequest4(t *testing.T) {
+	// give invalid method name to generate http request generate error.
+	req, err := gohttp.GenRequest("Maybe this is error.", "localhost:8080")
+	assert.Nil(t, req)
+	assert.Error(t, err)
 }
