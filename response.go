@@ -82,7 +82,7 @@ func ResponseJSONToParams(r *http.Response, params interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := json.Unmarshal(b, &params); err != nil {
+	if err := json.Unmarshal(b, params); err != nil {
 		return err
 	}
 	return nil
