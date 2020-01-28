@@ -17,7 +17,7 @@ type testRequest struct {
 	Params []string `json:"params"`
 }
 
-var req = testRequest{
+var testReq = testRequest{
 	ID:     123,
 	Name:   "abcdefg",
 	Params: []string{"hij", "klmn", "opqr", "stu", "vw", "xyz"},
@@ -28,16 +28,16 @@ func TestRequestJSONToParams(t *testing.T) {
 		var data testRequest
 		err := gohttp.RequestJSONToParams(r, &data)
 		assert.NoError(t, err)
-		assert.EqualValues(t, req.ID, data.ID)
-		assert.EqualValues(t, req.Name, data.Name)
-		assert.EqualValues(t, req.Params, data.Params)
+		assert.EqualValues(t, testReq.ID, data.ID)
+		assert.EqualValues(t, testReq.Name, data.Name)
+		assert.EqualValues(t, testReq.Params, data.Params)
 		gohttp.ResponseOK(w)
 	})
 
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
 
-	body, err := json.Marshal(req)
+	body, err := json.Marshal(testReq)
 	assert.NoError(t, err)
 
 	r, err := http.Post(ts.URL, "text/json", bytes.NewReader(body))
@@ -78,7 +78,7 @@ func TestGenRequest(t *testing.T) {
 	defer ts.Close()
 
 	url := ts.URL
-	req, err := gohttp.GenRequest(gohttp.HttpMethods.GET, url)
+	req, err := gohttp.GenRequest(gohttp.HttpMethods.GET, url, nil)
 	assert.NoError(t, err)
 	c := new(http.Client)
 	res, err := c.Do(req)
@@ -93,9 +93,9 @@ func TestGenRequest2(t *testing.T) {
 		var data testRequest
 		err := gohttp.RequestJSONToParams(r, &data)
 		assert.NoError(t, err)
-		assert.EqualValues(t, req.ID, data.ID)
-		assert.EqualValues(t, req.Name, data.Name)
-		assert.EqualValues(t, req.Params, data.Params)
+		assert.EqualValues(t, testReq.ID, data.ID)
+		assert.EqualValues(t, testReq.Name, data.Name)
+		assert.EqualValues(t, testReq.Params, data.Params)
 		gohttp.ResponseOK(w)
 	})
 
@@ -103,7 +103,7 @@ func TestGenRequest2(t *testing.T) {
 	defer ts.Close()
 
 	url := ts.URL
-	req, err := gohttp.GenRequest(gohttp.HttpMethods.POST, url, &req)
+	req, err := gohttp.GenRequest(gohttp.HttpMethods.POST, url, &testReq)
 	assert.NoError(t, err)
 	c := new(http.Client)
 	res, err := c.Do(req)

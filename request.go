@@ -25,17 +25,18 @@ func RequestJSONToParams(r *http.Request, params interface{}) error {
 
 ////// Send request (for client side program)
 
-// GenRequest generate an HTTP request for send. 'data' can be put multiple data, but only first one data is taken. Currently, data will be marshal to JSON strings.
-func GenRequest(method HTTPMethod, url string, data ...interface{}) (*http.Request, error) {
-	var body io.Reader = nil
-	if data != nil {
-		bj, err := json.Marshal(data[0])
+// GenRequest generate an HTTP request for send. Body have to have `json` tag to be marshal to JSON strings.
+func GenRequest(method HTTPMethod, url string, body interface{}) (*http.Request, error) {
+	var buf io.Reader = nil
+	if body != nil {
+		bj, err := json.Marshal(body)
 		if err != nil {
 			return nil, err
 		}
-		body = bytes.NewBuffer(bj)
+		buf = bytes.NewBuffer(bj)
 	}
-	req, err := http.NewRequest(method.String(), url, body)
+
+	req, err := http.NewRequest(method.String(), url, buf)
 	if err != nil {
 		return nil, err
 	}
