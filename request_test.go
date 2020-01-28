@@ -78,7 +78,7 @@ func TestGenRequest(t *testing.T) {
 	defer ts.Close()
 
 	url := ts.URL
-	req, err := gohttp.GenRequest(http.MethodGet, url)
+	req, err := gohttp.GenRequest(gohttp.HttpMethods.GET, url)
 	assert.NoError(t, err)
 	c := new(http.Client)
 	res, err := c.Do(req)
@@ -103,7 +103,7 @@ func TestGenRequest2(t *testing.T) {
 	defer ts.Close()
 
 	url := ts.URL
-	req, err := gohttp.GenRequest(http.MethodPost, url, &req)
+	req, err := gohttp.GenRequest(gohttp.HttpMethods.POST, url, &req)
 	assert.NoError(t, err)
 	c := new(http.Client)
 	res, err := c.Do(req)
@@ -113,14 +113,7 @@ func TestGenRequest2(t *testing.T) {
 
 func TestGenRequest3(t *testing.T) {
 	// give channel as parameter to generate JSON marshall error.
-	req, err := gohttp.GenRequest(http.MethodPut, "http://localhost:8080", make(chan int))
-	assert.Nil(t, req)
-	assert.Error(t, err)
-}
-
-func TestGenRequest4(t *testing.T) {
-	// give invalid method name to generate http request generate error.
-	req, err := gohttp.GenRequest("Maybe this is error.", "localhost:8080")
+	req, err := gohttp.GenRequest(gohttp.HttpMethods.PUT, "http://localhost:8080", make(chan int))
 	assert.Nil(t, req)
 	assert.Error(t, err)
 }
