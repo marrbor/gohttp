@@ -55,6 +55,26 @@ func InternalServerError(w http.ResponseWriter, err error) {
 	errResponse(w, http.StatusInternalServerError, err)
 }
 
+// NotImplementedError returns http 501
+func NotImplementedError(w http.ResponseWriter, err error) {
+	errResponse(w, http.StatusNotImplemented, err)
+}
+
+// BadGatewayError returns http 502
+func BadGatewayError(w http.ResponseWriter, err error) {
+	errResponse(w, http.StatusBadGateway, err)
+}
+
+// ServiceUnavailableError returns http 503
+func ServiceUnavailableError(w http.ResponseWriter, err error) {
+	errResponse(w, http.StatusServiceUnavailable, err)
+}
+
+// GatewayTimeoutError returns http 504
+func GatewayTimeoutError(w http.ResponseWriter, err error) {
+	errResponse(w, http.StatusGatewayTimeout, err)
+}
+
 // JSONResponse returns JSON object
 func JSONResponse(w http.ResponseWriter, data interface{}) error {
 	if data == nil {

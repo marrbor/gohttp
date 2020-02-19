@@ -172,3 +172,60 @@ func TestResponseJSONToParams(t *testing.T) {
 	err = gohttp.ResponseJSONToParams(r, &x)
 	assert.Error(t, err)
 }
+
+func TestNotImplementedError(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gohttp.NotImplementedError(w, fmt.Errorf("not implemented"))
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+	r, err := http.Get(ts.URL)
+	assert.NoError(t, err)
+	assert.EqualValues(t, http.StatusNotImplemented, r.StatusCode)
+	body, err := ioutil.ReadAll(r.Body)
+	assert.NoError(t, err)
+	assert.EqualValues(t, "not implemented\n", string(body))
+}
+
+func TestBadGatewayError(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gohttp.BadGatewayError(w, fmt.Errorf("bad gateway"))
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+	r, err := http.Get(ts.URL)
+	assert.NoError(t, err)
+	assert.EqualValues(t, http.StatusBadGateway, r.StatusCode)
+	body, err := ioutil.ReadAll(r.Body)
+	assert.NoError(t, err)
+	assert.EqualValues(t, "bad gateway\n", string(body))
+}
+
+func TestServiceUnavailableError(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gohttp.ServiceUnavailableError(w, fmt.Errorf("service unavailable"))
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+	r, err := http.Get(ts.URL)
+	assert.NoError(t, err)
+	assert.EqualValues(t, http.StatusServiceUnavailable, r.StatusCode)
+	body, err := ioutil.ReadAll(r.Body)
+	assert.NoError(t, err)
+	assert.EqualValues(t, "service unavailable\n", string(body))
+}
+
+func TestGatewayTimeoutError(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gohttp.GatewayTimeoutError(w, fmt.Errorf("gateway timeout"))
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+	r, err := http.Get(ts.URL)
+	assert.NoError(t, err)
+	assert.EqualValues(t, http.StatusGatewayTimeout, r.StatusCode)
+	body, err := ioutil.ReadAll(r.Body)
+	assert.NoError(t, err)
+	assert.EqualValues(t, "gateway timeout\n", string(body))
+}
+
