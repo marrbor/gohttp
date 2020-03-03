@@ -117,3 +117,24 @@ func TestGenRequest3(t *testing.T) {
 	assert.Nil(t, req)
 	assert.Error(t, err)
 }
+
+func TestAddQueries(t *testing.T) {
+
+	type qTest struct {
+		queries map[string]string
+		expects string
+	}
+
+	baseURL := "http://localhost"
+	qTests := []qTest{
+		{queries: map[string]string{"id": "abc"}, expects: baseURL + "?id=abc"},
+		{queries: map[string]string{"id": "abc", "name": "xyz"}, expects: baseURL + "?id=abc&name=xyz"},
+	}
+
+	for i := range qTests {
+		req, err := http.NewRequest(http.MethodGet, baseURL, nil)
+		assert.NoError(t, err)
+		req = gohttp.AddQueries(req, qTests[i].queries)
+		assert.EqualValues(t, qTests[i].expects, req.URL.String())
+	}
+}

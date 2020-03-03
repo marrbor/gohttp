@@ -45,3 +45,13 @@ func GenRequest(method HTTPMethod, url string, body interface{}) (*http.Request,
 	}
 	return req, nil
 }
+
+// AddQueries adds given query into the URL of given request and return it.
+func AddQueries(req *http.Request, queries map[string]string) *http.Request {
+	q := req.URL.Query()
+	for k, v := range queries {
+		q.Add(k, v)
+	}
+	req.URL.RawQuery = q.Encode()
+	return req
+}
