@@ -1,6 +1,6 @@
 module github.com/marrbor/gohttp
 
-go 1.13
+go 1.14
 
 require (
 	github.com/marrbor/golog v0.0.0-20200120062617-fc7656502c6d
