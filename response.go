@@ -107,3 +107,30 @@ func ResponseJSONToParams(r *http.Response, params interface{}) error {
 	}
 	return nil
 }
+
+////// Response class checker https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+
+// IsInformational returns whether response is informational class (1xx) or not
+func IsInformational(r *http.Response) bool {
+	return http.StatusContinue <= r.StatusCode && r.StatusCode < http.StatusOK
+}
+
+// IsSuccessful returns whether response is Successful class (2xx) or not
+func IsSuccessful(r *http.Response) bool {
+	return http.StatusOK <= r.StatusCode && r.StatusCode < http.StatusMultipleChoices
+}
+
+// IsRedirection returns whether response is Redirection class (3xx) or not
+func IsRedirection(r *http.Response) bool {
+	return http.StatusMultipleChoices <= r.StatusCode && r.StatusCode < http.StatusBadRequest
+}
+
+// IsClientError returns whether response is client error class (4xx) or not
+func IsClientError(r *http.Response) bool {
+	return http.StatusBadRequest <= r.StatusCode && r.StatusCode < http.StatusInternalServerError
+}
+
+// IsServerError returns whether response is server error class (5xx) or not
+func IsServerError(r *http.Response) bool {
+	return http.StatusInternalServerError <= r.StatusCode && r.StatusCode < 600
+}

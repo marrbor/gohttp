@@ -229,3 +229,33 @@ func TestGatewayTimeoutError(t *testing.T) {
 	assert.EqualValues(t, "gateway timeout\n", string(body))
 }
 
+func isTestSubroutine(t *testing.T, base int, f func(r *http.Response) bool) {
+	r := new(http.Response)
+
+	// out of range patterns for every function
+	r.StatusCode = -1
+	assert.EqualValues(t, false, f(r))
+	r.StatusCode = 0
+	assert.EqualValues(t, false, f(r))
+	r.StatusCode = 1
+	assert.EqualValues(t, false, f(r))
+
+	r.StatusCode = base - 1
+	assert.EqualValues(t, false, f(r))
+	r.StatusCode = base
+	assert.EqualValues(t, true, f(r))
+	r.StatusCode = base + 1
+	assert.EqualValues(t, true, f(r))
+	r.StatusCode = base + 99
+	assert.EqualValues(t, true, f(r))
+	r.StatusCode = base + 100
+	assert.EqualValues(t, false, f(r))
+}
+
+func TestIs(t *testing.T) {
+	isTestSubroutine(t, 100, gohttp.IsInformational)
+	isTestSubroutine(t, 200, gohttp.IsSuccessful)
+	isTestSubroutine(t, 300, gohttp.IsRedirection)
+	isTestSubroutine(t, 400, gohttp.IsClientError)
+	isTestSubroutine(t, 500, gohttp.IsServerError)
+}
