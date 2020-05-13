@@ -130,6 +130,11 @@ func IsClientError(r *http.Response) bool {
 	return http.StatusBadRequest <= r.StatusCode && r.StatusCode < http.StatusInternalServerError
 }
 
+// IsNotFound returns whether response is 404 or not
+func IsNotFound(r *http.Response) bool {
+	return http.StatusNotFound == r.StatusCode
+}
+
 // IsServerError returns whether response is server error class (5xx) or not
 func IsServerError(r *http.Response) bool {
 	return http.StatusInternalServerError <= r.StatusCode && r.StatusCode < 600

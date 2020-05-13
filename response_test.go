@@ -258,4 +258,10 @@ func TestIs(t *testing.T) {
 	isTestSubroutine(t, 300, gohttp.IsRedirection)
 	isTestSubroutine(t, 400, gohttp.IsClientError)
 	isTestSubroutine(t, 500, gohttp.IsServerError)
+
+	r := new(http.Response)
+	r.StatusCode = 404
+	assert.True(t, gohttp.IsNotFound(r))
+	r.StatusCode = 300
+	assert.False(t, gohttp.IsNotFound(r))
 }
