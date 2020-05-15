@@ -265,3 +265,37 @@ func TestIs(t *testing.T) {
 	r.StatusCode = 300
 	assert.False(t, gohttp.IsNotFound(r))
 }
+
+func TestResponseToError(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := gohttp.JSONResponse(w, &res)
+		assert.NoError(t, err)
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	r, _ := http.Get(ts.URL)
+	r.StatusCode = 404
+	r.Status = "404 Not found"
+	err := gohttp.ResponseToError(r, nil, nil)
+	assert.EqualError(t, err, "404 404 Not found:\n {\"id\":123,\"name\":\"abcdefg\",\"params\":[\"hij\",\"klmn\",\"opqr\",\"stu\",\"vw\",\"xyz\"]}")
+
+	r, _ = http.Get(ts.URL)
+	err = gohttp.ResponseToError(r, nil, nil)
+	assert.NoError(t, err)
+
+	r, _ = http.Get(ts.URL)
+	r.StatusCode = 404
+	r.Status = "404 Not found"
+	err = gohttp.ResponseToError(r, func(r *http.Response) bool { return r.StatusCode == 404 }, nil)
+	assert.NoError(t, err)
+
+	r, _ = http.Get(ts.URL)
+	err = gohttp.ResponseToError(r,
+		func(r *http.Response) bool { return r.StatusCode == 404 },
+		func(i int, s1, s2 string) string {
+			return fmt.Sprintf("%s %s %d", s2, s1, i)
+
+		})
+	assert.EqualError(t, err, "{\"id\":123,\"name\":\"abcdefg\",\"params\":[\"hij\",\"klmn\",\"opqr\",\"stu\",\"vw\",\"xyz\"]} 200 OK 200")
+}

@@ -2,6 +2,7 @@ package gohttp
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -106,6 +107,31 @@ func ResponseJSONToParams(r *http.Response, params interface{}) error {
 		return err
 	}
 	return nil
+}
+
+// ResponseToError convert status and body into an error if given function (default: IsSuccessful) returns false
+func ResponseToError(r *http.Response, jf func(*http.Response) bool, ff func(int, string, string) string) error {
+	if jf == nil {
+		jf = IsSuccessful
+	}
+	if jf(r) {
+		return nil
+	}
+
+	defer r.Body.Close()
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+
+	bs := string(b)
+	if ff == nil {
+		ff = func(code int, status, body string) string {
+			return fmt.Sprintf("%d %s:\n %s", code, status, body)
+		}
+	}
+	es := ff(r.StatusCode, r.Status, bs)
+	return fmt.Errorf(es)
 }
 
 ////// Response class checker https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
